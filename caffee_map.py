@@ -1,38 +1,44 @@
-#!/usr/bin/env python3
-
 import pandas as pd
 
-def parse_data():
-    df_map    = pd.read_csv('dataFile/area_map.csv')
-    df_struct = pd.read_csv('dataFile/area_struct.csv')
-    df_cat    = pd.read_csv('dataFile/area_category.csv')
-    
-    # 2) category 파일 컬럼명 정리
-    df_cat.columns = df_cat.columns.str.strip()  # ['category', 'struct']
-    df_cat = df_cat.rename(columns={'struct': 'name'})  # ['category', 'name']
-    
-    # 3) 지도 데이터 + 구조물 정보 병합 (x, y 기준)
-    df = pd.merge(df_map,
-                  df_struct,
-                  on=['x', 'y'],
-                  how='left')
-    
-    # 4) 구조물 이름 매핑 (category 기준)
-    df = pd.merge(df,
-                  df_cat,
-                  on='category',
-                  how='left')
-    
-    # 5) area 기준 정렬 및 area 1에 속하는 부분만 출력
-    df = df.sort_values('area').reset_index(drop=True)
-    print(df[df['area'] == 1])
 
-    
-    # 6) 결과 저장
-    output_file = 'dataFile/mas_map.csv'
-    df.to_csv(output_file, index=False, encoding='utf-8-sig')
-    print(f"{output_file} 저장 완료 (행 수: {len(df)})")
-    return df
+def Serching_Analysis():
+    structure = pd.read_csv("dataFile/area_struct.csv")
+    category = pd.read_csv("dataFile/area_category.csv")
+    map_data = pd.read_csv("dataFile/area_map.csv")
+
+    # 카테고리 매핑
+    category_dict = {
+        **category.set_index(category.columns[0])[category.columns[1]].to_dict(),
+        0: " etc",
+    }
+
+    # 카테고리id -> 실제 이름
+    structure[structure.columns[2]] = structure[structure.columns[2]].map(category_dict)
+
+    # 좌표 기준, 아우터 조인 실행 후, area 기준으로 정렬
+    merged_map_data = (
+        map_data.merge(structure, on=["x", "y"], how="outer")
+        .sort_values(by="area")
+        .reset_index(drop="True")
+    )
+
+    # Area1 데이터 필터링 결과 저장
+    merged_map_data[merged_map_data["area"] == 1].reset_index(drop=True).to_csv(
+        "dataFile/mas_map.csv", index=False, encoding="utf-8-sig"
+    )
+
+    return merged_map_data
+
+
+def print_report(data):
+    summary = data["category"].value_counts().sort_index().to_frame("개수")
+    print("구조물 종류별 개수:")
+    print(summary)
+
+
+def main():
+    print_report(Serching_Analysis())
+
 
 if __name__ == "__main__":
-    parse_data()
+    main()
