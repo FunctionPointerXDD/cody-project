@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def Serching_Analysis():
+def Serching_Analysis() -> pd.DataFrame:
     structure = pd.read_csv("dataFile/area_struct.csv")
     category = pd.read_csv("dataFile/area_category.csv")
     map_data = pd.read_csv("dataFile/area_map.csv")
@@ -30,7 +30,7 @@ def Serching_Analysis():
     return merged_map_data
 
 
-def print_report(data):
+def print_report(data) -> None:
     summary = data["category"].value_counts().sort_index().to_frame("개수")
     print("구조물 종류별 개수:")
     print(summary)
