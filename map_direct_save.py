@@ -21,12 +21,12 @@ def load_data(path: str = 'dataFile/mas_map.csv') -> pd.DataFrame:
     컬럼명 공백 제거, name 컬럼 값 strip 처리
 
     :param path: CSV 파일 경로
-    :return: DataFrame (x, y, category, name, ConstructionSite)
+    :return: DataFrame (x, y, category, ConstructionSite)
     """
     df = pd.read_csv(path)
     df.columns = df.columns.str.strip()
-    if 'name' in df.columns:
-        df['name'] = df['name'].astype(str).str.strip()
+    if 'category' in df.columns:
+        df['category'] = df['category'].astype(str).str.strip()
     return df
 
 
@@ -106,7 +106,7 @@ def save_path(
     :return: 저장된 DataFrame
     """
     df_path = pd.DataFrame(path, columns=['x','y'])
-    info = df[['x','y','category','name']]
+    info = df[['x','y','category']]
     df_path = df_path.merge(info, on=['x','y'], how='left')
     df_path.to_csv(output_csv, index=False, encoding='utf-8-sig')
     print(f"{output_csv} 저장 완료 (이동 횟수: {len(path)-1})")
@@ -137,10 +137,10 @@ def plot_path(
     ax.set_aspect('equal')
 
     styles = {
-        1:{'marker':'o','s':100,'color':'brown','label':'Apartment'},
-        2:{'marker':'o','s':100,'color':'brown','label':'Building'},
-        4:{'marker':'s','s':150,'color':'green','label':'Bandalgom coffee'},
-        3:{'marker':'^','s':150,'color':'green','label':'My Home'},
+        'Apartment':{'marker':'o','s':100,'color':'brown','label':'Apartment'},
+        'Building':{'marker':'o','s':100,'color':'brown','label':'Building'},
+        'BandalgomCoffee':{'marker':'s','s':150,'color':'green','label':'Bandalgom coffee'},
+        'MyHome':{'marker':'^','s':150,'color':'green','label':'My Home'},
     }
     for cat, style in styles.items():
         pts = df[df['category']==cat]
@@ -167,14 +167,10 @@ def main():
     adj = build_graph(df)
 
     # 시작/도착점 설정
-    start_row = df[df['name']=='MyHome']
-    if start_row.empty:
-        start_row = df[df['category']==3]
+    start_row = df[df['category']=='MyHome']
     sx, sy = int(start_row.iloc[0].x), int(start_row.iloc[0].y)
 
-    end_row = df[df['name']=='BandalgomCoffee']
-    if end_row.empty:
-        end_row = df[df['category']==4]
+    end_row = df[df['category']=='BandalgomCoffee']
     ex, ey = int(end_row.iloc[0].x), int(end_row.iloc[0].y)
 
     start = (sx, sy)
