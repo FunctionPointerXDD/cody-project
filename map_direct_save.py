@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 map_direct_save.py
 
@@ -15,7 +13,7 @@ from collections import deque
 from typing import Dict, List, Tuple
 
 
-def load_data(path: str = "dataFile/mas_map.csv") -> pd.DataFrame:
+def load_data(path: str = 'dataFile/mas_map.csv') -> pd.DataFrame:
     """
     분석된 지도 데이터를 CSV 파일에서 로드합니다.
     컬럼명 공백 제거, struct 컬럼 값 strip 처리
@@ -41,7 +39,7 @@ def build_graph(df: pd.DataFrame) -> Dict[Tuple[int, int], List[Tuple[int, int]]
     traversable = {
         (int(r.x), int(r.y))
         for _, r in df.iterrows()
-        if int(r.get("ConstructionSite", 0)) != 1
+        if int(r.get('ConstructionSite', 0)) != 1
     }
     adj: Dict[Tuple[int, int], List[Tuple[int, int]]] = {pt: [] for pt in traversable}
     for x, y in traversable:
@@ -95,7 +93,7 @@ def bfs_shortest_path(
 def save_path(
     df: pd.DataFrame,
     path: List[Tuple[int, int]],
-    output_csv: str = "dataFile/home_to_cafe.csv",
+    output_csv: str = 'dataFile/home_to_cafe.csv',
 ) -> None:
     """
     최단 경로를 CSV 파일로 저장
@@ -113,7 +111,7 @@ def save_path(
 
 
 def plot_path(
-    df: pd.DataFrame, path: List[Tuple[int, int]], output_img: str = "img/map_final.png"
+    df: pd.DataFrame, path: List[Tuple[int, int]], output_img: str = 'img/map_final.png'
 ) -> None:
     """
     지도 위에 최단 경로 빨간 선 시각화
@@ -131,42 +129,40 @@ def plot_path(
     ax.set_xticks(range(x_min, x_max + 1))
     ax.set_yticks(range(y_min, y_max + 1))
     ax.grid(True, linestyle="--", linewidth=0.5)
-    ax.set_aspect("equal")
+    ax.set_aspect('equal')
 
     styles = {
         'Apartment':{'marker':'o','s':100,'color':'brown','label':'Apartment'},
         'Building':{'marker':'o','s':100,'color':'brown','label':'Building'},
-        'BandalgomCoffee':{'marker':'s','s':150,'color':'green','label':'Bandalgom coffee'},
-        'MyHome':{'marker':'^','s':150,'color':'green','label':'My Home'},
+        'BandalgomCoffee':{'marker':'s','s':150,'color':'green','label':'BandalgomCoffee'},
+        'MyHome':{'marker':'^','s':150,'color':'green','label':'MyHome'},
     }
     for cat, style in styles.items():
-        pts = df[df["category"] == cat]
+        pts = df[df['category'] == cat]
         if not pts.empty:
             ax.scatter(pts.x, pts.y, **style)
-    if "ConstructionSite" in df.columns:
-        cs = df[df["ConstructionSite"] == 1]
+    if 'ConstructionSite' in df.columns:
+        cs = df[df['ConstructionSite'] == 1]
         if not cs.empty:
             ax.scatter(
                 cs.x,
                 cs.y,
-                marker="s",
+                marker='s',
                 s=200,
-                color="lightgray",
-                label="under construction",
+                color='lightgray',
+                label='Constructionsite',
             )
 
     xs, ys = zip(*path)
-    ax.plot(xs, ys, color="red", linewidth=2, label="shortest route")
-    ax.legend(
-        loc="upper left", bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize="small"
-    )
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_title("MyHome → BandalgomCoffee shortest route")
+    ax.plot(xs, ys, color='red', linewidth=2, label='shortest route')
+    ax.legend(loc='lower right')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_title('MyHome → BandalgomCoffee shortest route')
     plt.tight_layout()
-    plt.savefig(output_img, dpi=150, bbox_inches="tight")
+    plt.savefig(output_img, dpi=150, bbox_inches='tight')
     plt.close(fig)
-    print(f"{output_img} 저장 완료")
+    print(f'{output_img} 저장 완료')
 
 
 def main():
@@ -185,12 +181,12 @@ def main():
 
     path = bfs_shortest_path(adj, start, end)
     if not path:
-        print("경로를 찾을 수 없습니다.")
+        print('경로를 찾을 수 없습니다.')
         exit(1)
 
     save_path(df, path)
     plot_path(df, path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
