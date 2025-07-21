@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 def draw_map(input_file='dataFile/mas_map.csv', output_file='img/map.png'):
     # 데이터 로드
     df = pd.read_csv(input_file)
+    df.columns = df.columns.str.strip()
+    if 'category' in df.columns:
+        df['category'] = df['category'].astype(str).str.strip()
 
     # 좌표 범위 설정
     x_min, x_max = int(df['x'].min()), int(df['x'].max())
@@ -24,10 +27,10 @@ def draw_map(input_file='dataFile/mas_map.csv', output_file='img/map.png'):
 
     # 구조물별 스타일 정의: category_id -> marker, 크기, 색상, 레이블, zorder
     category_styles = {
-        1: {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Apartment', 'zorder': 3},
-        2: {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Building', 'zorder': 3},
-        4: {'marker': 's', 's': 150, 'color': 'green', 'label': 'BandalgomCoffee', 'zorder': 4},
-        3: {'marker': '^', 's': 150, 'color': 'green', 'label': 'MyHome', 'zorder': 5},
+        'Apartment': {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Apartment', 'zorder': 3},
+        'Building': {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Building', 'zorder': 3},
+        'BandalgomCoffee': {'marker': 's', 's': 150, 'color': 'green', 'label': 'BandalgomCoffee', 'zorder': 4},
+        'MyHome': {'marker': '^', 's': 150, 'color': 'green', 'label': 'MyHome', 'zorder': 5},
     }
 
     # 1) 아파트, 빌딩, 반달곰 커피, 내 집 그리기
