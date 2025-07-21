@@ -8,8 +8,7 @@ def parse_data():
     df_cat    = pd.read_csv('dataFile/area_category.csv')
     
     # 2) category 파일 컬럼명 정리
-    df_cat.columns = df_cat.columns.str.strip()  # ['category', 'struct']
-    df_cat = df_cat.rename(columns={'struct': 'name'})  # ['category', 'name']
+    df_cat.columns = df_cat.columns.str.strip()
     
     # 3) 지도 데이터 + 구조물 정보 병합 (x, y 기준)
     df = pd.merge(df_map,
