@@ -94,9 +94,9 @@ def main():
     try:
         draw_map()
     except FileNotFoundError as e:
-        print(f'파일이 없습니다.{e.filename}')
+        print(f"파일이 없습니다.{e.filename}")
     except PermissionError as e:
-        print(f'파일 권한이 없습니다.{e.filename}')
+        print(f"파일 권한이 없습니다.{e.filename}")
 
 
 if __name__ == "__main__":

@@ -4,3 +4,7 @@ class ColumnError(Exception):
 
 class RowError(Exception):
     pass
+
+
+class PathNotFound(Exception):
+    pass

@@ -11,20 +11,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from collections import deque
 from typing import Dict, List, Tuple
+from exceptions import PathNotFound
 
 
 def load_data(path: str = "dataFile/mas_map.csv") -> pd.DataFrame:
-    """
-    분석된 지도 데이터를 CSV 파일에서 로드합니다.
-    컬럼명 공백 제거, struct 컬럼 값 strip 처리
-
-    :param path: CSV 파일 경로
-    :return: DataFrame (x, y, category, ConstructionSite)
-    """
     df = pd.read_csv(path)
     df.columns = df.columns.str.strip()
     if "category" in df.columns:
-        df["category"] = df["category"].astype(str).str.strip()
+        df["category"] = df["category"].str.strip()
     return df
 
 
@@ -32,9 +26,6 @@ def build_graph(df: pd.DataFrame) -> Dict[Tuple[int, int], List[Tuple[int, int]]
     """
     4-방향 이동 가능 좌표 그래프 생성
     ConstructionSite==1 위치 제외
-
-    :param df: 지도 데이터 DataFrame
-    :return: 인접 리스트 딕셔너리
     """
     traversable = set()
     for _, r in df.iterrows():
@@ -81,7 +72,7 @@ def bfs_shortest_path(
 
     # 경로 역추적
     path: List[Tuple[int, int]] = []
-    cur = u 
+    cur = u
     while cur != start:
         path.append(cur)
         cur = prev.get(cur)
@@ -109,7 +100,7 @@ def save_path(
     info = df[["x", "y", "category"]]
     df_path = df_path.merge(info, on=["x", "y"], how="left")
     df_path.to_csv(output_csv, index=False, encoding="utf-8-sig")
-    print(f"{output_csv} 저장 완료 (이동 횟수: {len(path) - 1})")
+    # print(f"{output_csv} 저장 완료 (이동 횟수: {len(path) - 1})")
 
 
 def plot_path(
@@ -182,20 +173,26 @@ def main():
         sx, sy = int(start_row.iloc[0].x), int(start_row.iloc[0].y)
         start = (sx, sy)
 
-        targets = [(int(r.x), int(r.y)) for _, r in df[df['category'] == 'BandalgomCoffee'].iterrows()]
+        coffee_df = df[df["category"] == "BandalgomCoffee"]
+        targets = []
+        for _, row in coffee_df.iterrows():
+            x = int(row.x)
+            y = int(row.y)
+            targets.append((x, y))
 
         path = bfs_shortest_path(adj, start, targets)
         if not path:
-            print("경로를 찾을 수 없습니다.")
-            exit(1)
+            raise PathNotFound
 
         save_path(df, path)
         plot_path(df, path)
 
     except FileNotFoundError as e:
-        print(f'파일이 없습니다.{e.filename}')
+        print(f"파일이 없습니다.{e.filename}")
     except PermissionError as e:
-        print(f'파일 권한이 없습니다.{e.filename}')
+        print(f"파일 권한이 없습니다.{e.filename}")
+    except PathNotFound:
+        print("경로를 찾을 수 없습니다.")
 
 
 if __name__ == "__main__":
