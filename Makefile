@@ -4,7 +4,7 @@ all: data map path
 
 data:
 	@echo "1) Parsing data..."
-	python coffee_map.py
+	python caffee_map.py
 
 map: data
 	@echo "2) Drawing map..."
@@ -15,5 +15,5 @@ path: map
 	python map_direct_save.py
 
 clean:
-	rm -f dataFile/mas_map.csv img/map.png dataFile/home_to_cafe.csv img/map_final.png
+	rm -f results/map.png results/home_to_cafe.csv results/map_final.png
 	@echo "Artifacts removed."
