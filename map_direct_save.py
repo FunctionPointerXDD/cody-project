@@ -36,11 +36,12 @@ def build_graph(df: pd.DataFrame) -> Dict[Tuple[int, int], List[Tuple[int, int]]
     :param df: 지도 데이터 DataFrame
     :return: 인접 리스트 딕셔너리
     """
-    traversable = {
-        (int(r.x), int(r.y))
-        for _, r in df.iterrows()
-        if int(r.get("ConstructionSite", 0)) != 1
-    }
+    traversable = set()
+    for _, r in df.iterrows():
+        if int(r.get("ConstructionSite", 0)) != 1:
+            point = (int(r.x), int(r.y))
+            traversable.add(point)
+
     adj: Dict[Tuple[int, int], List[Tuple[int, int]]] = {pt: [] for pt in traversable}
     for x, y in traversable:
         for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
@@ -53,7 +54,7 @@ def build_graph(df: pd.DataFrame) -> Dict[Tuple[int, int], List[Tuple[int, int]]
 def bfs_shortest_path(
     adj: Dict[Tuple[int, int], List[Tuple[int, int]]],
     start: Tuple[int, int],
-    end: Tuple[int, int],
+    targets: List[Tuple[int, int]],
 ) -> List[Tuple[int, int]]:
     """
     BFS를 이용해 start에서 end까지 최단 경로를 찾습니다.
@@ -63,13 +64,14 @@ def bfs_shortest_path(
     :param end: 도착 좌표
     :return: 최단 경로 리스트 (없으면 빈 리스트)
     """
+    target_sets = set(targets)
     prev: Dict[Tuple[int, int], Tuple[int, int]] = {}
     visited = set([start])
     queue = deque([start])
 
     while queue:
         u = queue.popleft()
-        if u == end:
+        if u in target_sets:
             break
         for v in adj[u]:
             if v not in visited:
@@ -79,7 +81,7 @@ def bfs_shortest_path(
 
     # 경로 역추적
     path: List[Tuple[int, int]] = []
-    cur = end
+    cur = u 
     while cur != start:
         path.append(cur)
         cur = prev.get(cur)
@@ -178,14 +180,11 @@ def main():
         # 시작/도착점 설정
         start_row = df[df["category"] == "MyHome"]
         sx, sy = int(start_row.iloc[0].x), int(start_row.iloc[0].y)
-
-        end_row = df[df["category"] == "BandalgomCoffee"]
-        ex, ey = int(end_row.iloc[0].x), int(end_row.iloc[0].y)
-
         start = (sx, sy)
-        end = (ex, ey)
 
-        path = bfs_shortest_path(adj, start, end)
+        targets = [(int(r.x), int(r.y)) for _, r in df[df['category'] == 'BandalgomCoffee'].iterrows()]
+
+        path = bfs_shortest_path(adj, start, targets)
         if not path:
             print("경로를 찾을 수 없습니다.")
             exit(1)

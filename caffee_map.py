@@ -3,7 +3,7 @@ from exceptions import ColumnError
 from exceptions import RowError 
 
 
-DATA_DIR = 'testFile'
+DATA_DIR = 'dataFile'
 
 def validate_dataframe(df: pd.DataFrame, required_cols: list[str], name: str):
     missing_cols = [c for c in required_cols if c not in df.columns]
