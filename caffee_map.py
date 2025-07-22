@@ -2,22 +2,19 @@ import pandas as pd
 
 
 def Serching_Analysis() -> pd.DataFrame:
-    structure = pd.read_csv("dataFile/area_struct.csv")
-    category = pd.read_csv("dataFile/area_category.csv")
-    map_data = pd.read_csv("dataFile/area_map.csv")
+    struct, category, map_data = [pd.read_csv(
+        f"dataFile/area_{f}.csv") for f in ['struct', 'category', 'map']]
 
-    # 카테고리 매핑
+    # 카테고리 매핑, 적용
     category_dict = {
         **category.set_index(category.columns[0])[category.columns[1]].to_dict(),
-        0: " etc",
+        0: "etc",
     }
-
-    # 카테고리id -> 실제 이름
-    structure[structure.columns[2]] = structure[structure.columns[2]].map(category_dict)
+    struct[struct.columns[2]] = struct[struct.columns[2]].map(category_dict)
 
     # 좌표 기준, 아우터 조인 실행 후, area 기준으로 정렬
     merged_map_data = (
-        map_data.merge(structure, on=["x", "y"], how="outer")
+        map_data.merge(struct, on=["x", "y"], how="outer")
         .sort_values(by="area")
         .reset_index(drop="True")
     )
@@ -30,14 +27,10 @@ def Serching_Analysis() -> pd.DataFrame:
     return merged_map_data
 
 
-def print_report(data) -> None:
-    summary = data["category"].value_counts().sort_index().to_frame("개수")
-    print("구조물 종류별 개수:")
-    print(summary)
-
-
 def main():
-    print_report(Serching_Analysis())
+    data = Serching_Analysis().value_counts().sort_index().to_frame("개수")
+    print("구조물 종류별 개수:")
+    print(data)
 
 
 if __name__ == "__main__":
