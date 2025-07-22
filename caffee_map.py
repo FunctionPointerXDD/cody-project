@@ -2,37 +2,76 @@
 
 import pandas as pd
 
-def parse_data():
-    df_map    = pd.read_csv('dataFile/area_map.csv')
-    df_struct = pd.read_csv('dataFile/area_struct.csv')
-    df_cat    = pd.read_csv('dataFile/area_category.csv')
-    
-    # 2) category 파일 컬럼명 정리
-    df_cat.columns = df_cat.columns.str.strip()  # ['category', 'struct']
-    df_cat = df_cat.rename(columns={'struct': 'name'})  # ['category', 'name']
-    
-    # 3) 지도 데이터 + 구조물 정보 병합 (x, y 기준)
-    df = pd.merge(df_map,
-                  df_struct,
-                  on=['x', 'y'],
-                  how='left')
-    
-    # 4) 구조물 이름 매핑 (category 기준)
-    df = pd.merge(df,
-                  df_cat,
-                  on='category',
-                  how='left')
-    
-    # 5) area 기준 정렬 및 area 1에 속하는 부분만 출력
-    df = df.sort_values('area').reset_index(drop=True)
-    print(df[df['area'] == 1])
+def load_csv_files():
+    """CSV 파일 불러오기"""
+    area_map = pd.read_csv('dataFile/area_map.csv')
+    area_struct = pd.read_csv('dataFile/area_struct.csv')
+    area_category = pd.read_csv('dataFile/area_category.csv')
+    return area_map, area_struct, area_category
 
-    
-    # 6) 결과 저장
-    output_file = 'dataFile/mas_map.csv'
-    df.to_csv(output_file, index=False, encoding='utf-8-sig')
-    print(f"{output_file} 저장 완료 (행 수: {len(df)})")
-    return df
+def merge_and_analyze(area_map, area_struct, area_category):
+    """
+    데이터 병합, 카테고리 이름 매핑, area 기준 정렬, area 1 필터링
+    """
+    # area_category 컬럼 공백 제거
+    area_category.columns = area_category.columns.str.strip()
 
-if __name__ == "__main__":
-    parse_data()
+    # area_struct에 category 이름 매핑
+    area_struct = area_struct.merge(
+        area_category,
+        how='left',
+        on='category'
+    )
+
+    # 컬럼명 struct → category_name으로 변경
+    area_struct.rename(columns={'struct': 'category_name'}, inplace=True)
+
+    # area_map과 area_struct 병합
+    merged_df = area_map.merge(
+        area_struct,
+        how='left',
+        on=['x', 'y']
+    )
+
+    # area 기준으로 정렬
+    merged_df.sort_values(by=['area', 'x', 'y'], inplace=True)
+
+    # area 1 데이터만 필터링
+    area_1_df = merged_df[merged_df['area'] == 1]
+
+    return merged_df, area_1_df
+
+def print_summary_by_category(area_1_df):
+    """구조물 종류별 요약 통계 출력"""
+    summary = area_1_df['category_name'].value_counts()
+    print('=== 구조물 종류별 요약 통계 ===')
+    print(summary)
+
+def main():
+    area_map, area_struct, area_category = load_csv_files()
+
+    print('=== area_map.csv ===')
+    print(area_map.head())
+
+    print('=== area_struct.csv ===')
+    print(area_struct.head())
+
+    print('=== area_category.csv ===')
+    print(area_category.head())
+
+    merged_df, area_1_df = merge_and_analyze(
+        area_map,
+        area_struct,
+        area_category
+    )
+
+    print('=== 병합된 데이터 (상위 5개) ===')
+    print(merged_df.head())
+
+    print('=== area 1 데이터 ===')
+    print(area_1_df)
+
+    print_summary_by_category(area_1_df)
+
+if __name__ == '__main__':
+    main()
