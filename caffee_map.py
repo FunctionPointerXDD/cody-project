@@ -17,7 +17,8 @@ def validate_dataframe(df: pd.DataFrame, required_cols: list[str], name: str):
     if dup.any():
         raise RowError(f"[{name}] 중복된 행 존재: {df[dup].to_dict(orient='records')}")
 
-    missing = df.isnull().any(axis=1)
+    # 열 단위로(즉 가로로) 누락 데이터가 있는지 검증
+    missing = df.isnull().any(axis='columns')
     if missing.any():
         raise RowError(
             f"[{name}] 누락된 데이터 존재: {df[missing].to_dict(orient='records')}"
