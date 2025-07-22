@@ -4,60 +4,109 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def draw_map(input_file='dataFile/mas_map.csv', output_file='img/map.png'):
-    # 데이터 로드
-    df = pd.read_csv(input_file)
+def load_merged_data():
+    """1단계에서 생성된 병합 데이터를 불러오기"""
+    # 1단계 caffee_map.py 코드에서 merged_df를 csv로 저장하지 않았으므로
+    # 여기서는 다시 병합 과정을 수행
+    area_map = pd.read_csv('dataFile/area_map.csv')
+    area_struct = pd.read_csv('dataFile/area_struct.csv')
+    area_category = pd.read_csv('dataFile/area_category.csv')
 
-    # 좌표 범위 설정
-    x_min, x_max = int(df['x'].min()), int(df['x'].max())
-    y_min, y_max = int(df['y'].min()), int(df['y'].max())
+    area_category.columns = area_category.columns.str.strip()
 
-    # 플롯 설정
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ax.set_xlim(x_min - 0.5, x_max + 0.5)
-    ax.set_ylim(y_min - 0.5, y_max + 0.5)
-    ax.invert_yaxis()  # (1,1)이 좌측 상단이 되도록
-    ax.set_xticks(range(x_min, x_max + 1))
-    ax.set_yticks(range(y_min, y_max + 1))
-    ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+    area_struct = area_struct.merge(
+        area_category,
+        how='left',
+        on='category'
+    )
+    area_struct.rename(columns={'struct': 'category_name'}, inplace=True)
+
+    merged_df = area_map.merge(
+        area_struct,
+        how='left',
+        on=['x', 'y']
+    )
+    return merged_df
+
+
+def draw_map(merged_df):
+    """지도 시각화 및 저장"""
+    plt.figure(figsize=(10, 10))
+    ax = plt.gca()
+
+    max_x = merged_df['x'].max()
+    max_y = merged_df['y'].max()
+
+    # 그리드 라인
+    for x in range(1, max_x + 2):
+        ax.axvline(x - 0.5, color='lightgrey', linestyle='--', linewidth=0.5)
+    for y in range(1, max_y + 2):
+        ax.axhline(y - 0.5, color='lightgrey', linestyle='--', linewidth=0.5)
+
+    # 각 구조물 시각화
+    for _, row in merged_df.iterrows():
+        x = row['x']
+        y = max_y - row['y'] + 1  # 좌측 상단 (1,1) 기준
+
+        
+        if row['ConstructionSite'] == 1:
+            # 건설 현장: 회색 사각형
+            ax.add_patch(plt.Rectangle((x - 0.5, y - 0.5), 1, 1,
+                                       color='grey'))
+        elif row['category_name'] == 'Apartment':
+            # 아파트: 갈색 원형
+            ax.plot(x, y, 'o', color='brown', markersize=12)
+        elif row['category_name'] == 'Building':
+            # 빌딩: 갈색 원형
+            ax.plot(x, y, 'o', color='brown', markersize=12)
+        elif row['category_name'] == 'BandalgomCoffee':
+            # 반달곰 커피: 녹색 사각형
+            ax.add_patch(plt.Rectangle((x - 0.3, y - 0.3), 0.6, 0.6,
+                                       color='green'))
+        elif row['category_name'] == 'MyHome':
+            # 내 집: 녹색 삼각형
+            ax.plot(x, y, '^', color='green', markersize=12)
+
+        
+        # 좌측 상단 라벨
+        for x in range(1, max_x + 1):
+            ax.text(1, max_y + 0.2, '(1,1)', color='black', fontsize=8)
+
+        # 우측 하단 라벨
+        for y in range(1, max_y +1):
+            ax.text(max_x, 0.2, f'({max_x},{max_y})', color='black', fontsize=8)
+
+    # 범례 추가
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', label='Apartment/Building',
+               markerfacecolor='brown', markersize=10),
+        Line2D([0], [0], marker='s', color='w', label='Bandalgom Coffee',
+               markerfacecolor='green', markersize=10),
+        Line2D([0], [0], marker='^', color='w', label='MyHome',
+               markerfacecolor='green', markersize=10),
+        Line2D([0], [0], marker='s', color='grey', label='Construction Site',
+               markerfacecolor='grey', markersize=10)
+    ]
+    ax.legend(handles=legend_elements, loc='upper right')
+
+    # 축 설정
+    ax.set_xlim(0.5, max_x + 0.5)
+    ax.set_ylim(0.5, max_y + 0.5)
+    ax.set_xticks(range(1, max_x + 1))
+    ax.set_yticks(range(1, max_y + 1))
     ax.set_aspect('equal')
-
-    # 구조물별 스타일 정의: category_id -> marker, 크기, 색상, 레이블, zorder
-    category_styles = {
-        1: {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Apartment', 'zorder': 3},
-        2: {'marker': 'o', 's': 100, 'color': 'brown', 'label': 'Building', 'zorder': 3},
-        4: {'marker': 's', 's': 150, 'color': 'green', 'label': 'BandalgomCoffee', 'zorder': 4},
-        3: {'marker': '^', 's': 150, 'color': 'green', 'label': 'MyHome', 'zorder': 5},
-    }
-
-    # 1) 아파트, 빌딩, 반달곰 커피, 내 집 그리기
-    for cat_id, style in category_styles.items():
-        subset = df[df['category'] == cat_id]
-        if not subset.empty:
-            ax.scatter(subset['x'], subset['y'], **style)
-
-    # 2) 건설 현장: 마지막에 그려서 우선시 (겹침 허용)
-    if 'ConstructionSite' in df.columns:
-        const = df[df['ConstructionSite'] == 1]
-        if not const.empty:
-            ax.scatter(const['x'], const['y'],
-                       marker='s', s=200, color='lightgray',
-                       label='under_construction', zorder=2)
-
-    # 범례: 플롯 영역 밖 오른쪽에 배치
-    ax.legend(loc='upper left', bbox_to_anchor=(1.02, 1), borderaxespad=0, fontsize='small')
-
-    # 축 레이블 및 타이틀
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title('Local map')
+    ax.set_title('Area Map Visualization')
 
     # 이미지 저장
-    plt.tight_layout()
-    plt.savefig(output_file, dpi=150, bbox_inches='tight')
-    plt.close(fig)
-    print(f"{output_file} 저장 완료")
+    plt.savefig('results/map.png')
+    plt.close()
 
-if __name__ == "__main__":
-    draw_map()
 
+def main():
+    merged_df = load_merged_data()
+    draw_map(merged_df)
+
+
+if __name__ == '__main__':
+    main()
