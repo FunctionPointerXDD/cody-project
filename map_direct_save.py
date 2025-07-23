@@ -9,7 +9,6 @@ map_direct_save.py
 
 import pandas as pd
 import matplotlib.pyplot as plt
-from collections import deque
 from typing import Dict, List, Tuple
 from exceptions import PathNotFound
 
@@ -58,10 +57,10 @@ def bfs_shortest_path(
     target_sets = set(targets)
     prev: Dict[Tuple[int, int], Tuple[int, int]] = {}
     visited = set([start])
-    queue = deque([start])
+    queue = list([start])
 
     while queue:
-        u = queue.popleft()
+        u = queue.pop(0)
         if u in target_sets:
             break
         for v in adj[u]:
@@ -100,7 +99,6 @@ def save_path(
     info = df[["x", "y", "category"]]
     df_path = df_path.merge(info, on=["x", "y"], how="left")
     df_path.to_csv(output_csv, index=False, encoding="utf-8-sig")
-    # print(f"{output_csv} 저장 완료 (이동 횟수: {len(path) - 1})")
 
 
 def plot_path(
