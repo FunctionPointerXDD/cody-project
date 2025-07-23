@@ -4,7 +4,7 @@ all: data map path
 
 data:
 	@echo "1) Parsing data..."
-	python coffee_map.py
+	python caffee_map.py
 
 map: data
 	@echo "2) Drawing map..."
