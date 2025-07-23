@@ -72,7 +72,7 @@ def draw_map(input_file='dataFile/mas_map.csv', output_file='img/map.png'):
                 s=150,
                 color='lightgray',
                 label='Constructionsite',
-                zorder=3,
+                zorder=6,
             )
 
     # 범례: 플롯 영역 밖 오른쪽에 배치
