@@ -30,7 +30,7 @@ def Serching_Analysis() -> pd.DataFrame:
     merged_map_data = (
         map_data.merge(struct, on=["x", "y"], how="outer")
         .sort_values(by="area")
-        .reset_index(drop="True")
+        .reset_index(drop=True)
     )
 
     # Area1 데이터 필터링 결과 저장
