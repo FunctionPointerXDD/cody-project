@@ -12,7 +12,7 @@ REQUIRED_COLUMNS = {
 }
 
 
-def Serching_Analysis() -> pd.DataFrame:
+def serching_analysis() -> pd.DataFrame:
     struct, category, map_data = [
         pd.read_csv(f'dataFile/area_{f}.csv') for f in ['struct', 'category', 'map']
     ]
@@ -106,7 +106,7 @@ def main():
     try:
         check_valid_file()
         data = (
-            Serching_Analysis()['category'].value_counts(
+            serching_analysis()['category'].value_counts(
             ).sort_index().to_frame('개수')
         )
         print('구조물 종류별 개수:')
